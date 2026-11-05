@@ -22,6 +22,11 @@ router.patch(
   CategoryControllers.toggleFeaturedCategory,
 );
 
+router.patch(
+  "/toggle-home/:id",
+  CategoryControllers.toggleShowInHomeCategory,
+);
+
 // category.route.ts এ এটি যোগ করুন
 router.get("/:id", CategoryControllers.getSingleCategory);
 

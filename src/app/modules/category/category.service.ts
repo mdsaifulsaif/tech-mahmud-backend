@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Category } from "./category.model";
 import { Product } from "../product/product.model";
 import { uploadToCloudinary } from "../../utils/uploadToCloudinary";
@@ -181,25 +182,75 @@ const deleteCategoryFromDB = async (id: string) => {
   );
 };
 
+const getAllCategoryAndDescendantIds = async (
+  categoryIdentifier: string | mongoose.Types.ObjectId,
+): Promise<mongoose.Types.ObjectId[]> => {
+  try {
+    let targetCategory: any = null;
+    if (mongoose.Types.ObjectId.isValid(categoryIdentifier)) {
+      targetCategory = await Category.findById(categoryIdentifier).select("_id");
+    }
+    if (!targetCategory && typeof categoryIdentifier === "string") {
+      targetCategory = await Category.findOne({ slug: categoryIdentifier }).select("_id");
+    }
+    if (!targetCategory) return [];
+
+    const allIds: mongoose.Types.ObjectId[] = [new mongoose.Types.ObjectId(targetCategory._id)];
+
+    const getChildrenRecursive = async (parentIds: mongoose.Types.ObjectId[]) => {
+      const children = await Category.find({
+        parentCategory: { $in: parentIds },
+        isDeleted: { $ne: true },
+      }).select("_id");
+
+      if (children && children.length > 0) {
+        const childIds = children.map((c) => new mongoose.Types.ObjectId(c._id));
+        allIds.push(...childIds);
+        await getChildrenRecursive(childIds);
+      }
+    };
+
+    await getChildrenRecursive([new mongoose.Types.ObjectId(targetCategory._id)]);
+    return allIds;
+  } catch (err) {
+    console.error("Error finding descendant category IDs:", err);
+    return [];
+  }
+};
+
 const getProductsByCategoryFromDB = async (
   categoryId: string,
-  page: number,
-  limit: number,
+  page: number = 1,
+  limit: number = 10,
 ) => {
-  const category = await Category.findOne({ _id: categoryId, isDeleted: false });
+  const category = await Category.findOne({
+    _id: categoryId,
+    isDeleted: false,
+  });
 
   if (!category) {
     throw new Error("Category not found or deleted!");
   }
 
+  const descendantIds = await getAllCategoryAndDescendantIds(category._id);
+  const catFilter = descendantIds.length > 0 ? { $in: descendantIds } : categoryId;
+
   const skip = (page - 1) * limit;
 
-  const data = await Product.find({ categoryID: categoryId })
+  const data = await Product.find({
+    categoryID: catFilter,
+    isDeleted: { $ne: true },
+    status: "active",
+  })
     .skip(skip)
     .limit(limit)
     .populate("categoryID");
 
-  const total = await Product.countDocuments({ categoryID: categoryId });
+  const total = await Product.countDocuments({
+    categoryID: catFilter,
+    isDeleted: { $ne: true },
+    status: "active",
+  });
 
   return {
     meta: {
@@ -222,6 +273,16 @@ const toggleFeaturedCategoryIntoDB = async (id: string) => {
   return isExist;
 };
 
+const toggleShowInHomeCategoryIntoDB = async (id: string) => {
+  const isExist = await Category.findById(id);
+  if (!isExist) {
+    throw new Error("Category not found!");
+  }
+  isExist.showInHome = !isExist.showInHome;
+  await isExist.save();
+  return isExist;
+};
+
 export const CategoryServices = {
   createCategoryIntoDB,
   updateCategoryIntoDB,
@@ -230,4 +291,6 @@ export const CategoryServices = {
   deleteCategoryFromDB,
   getProductsByCategoryFromDB,
   toggleFeaturedCategoryIntoDB,
+  toggleShowInHomeCategoryIntoDB,
+  getAllCategoryAndDescendantIds,
 };

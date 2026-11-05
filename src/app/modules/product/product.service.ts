@@ -5,6 +5,7 @@ import { uploadToCloudinary } from "../../utils/uploadToCloudinary";
 import mongoose, { PipelineStage } from "mongoose";
 import cloudinary from "../../config/cloudinary";
 import { Category } from "../category/category.model";
+import { CategoryServices } from "../category/category.service";
 import { Brand } from "../brand/brand.model";
 
 // ===================== CREATE =====================
@@ -669,9 +670,14 @@ const getAllProductsFromDB = async (query: Record<string, any>) => {
   }
 
   if (category) {
-    matchStage.categoryID = mongoose.Types.ObjectId.isValid(category)
-      ? new mongoose.Types.ObjectId(category)
-      : category;
+    const descendantIds = await CategoryServices.getAllCategoryAndDescendantIds(category);
+    if (descendantIds.length > 0) {
+      matchStage.categoryID = { $in: descendantIds };
+    } else {
+      matchStage.categoryID = mongoose.Types.ObjectId.isValid(category)
+        ? new mongoose.Types.ObjectId(category)
+        : category;
+    }
   }
   if (productType) matchStage.productType = productType;
   if (status) matchStage.status = status;
@@ -1083,7 +1089,10 @@ const getProductsByCategorySlugFromDB = async (
   const pageNum = Number(page);
   const limitNum = Number(limit);
 
-  const matchStage: any = { categoryID: category._id, status: "active" };
+  const descendantIds = await CategoryServices.getAllCategoryAndDescendantIds(category._id);
+  const matchCat = descendantIds.length > 0 ? { $in: descendantIds } : category._id;
+
+  const matchStage: any = { categoryID: matchCat, status: "active", isDeleted: { $ne: true } };
 
   if (searchTerm) {
     matchStage.$or = [

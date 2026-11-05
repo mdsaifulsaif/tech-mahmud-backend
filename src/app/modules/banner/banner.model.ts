@@ -25,7 +25,16 @@ const bannerSchema = new Schema<IBanner>(
     },
     placement: {
       type: String,
-      enum: ["slider", "side_top", "side_middle", "side_bottom", "popup"],
+      enum: [
+        "slider",
+        "side_top",
+        "side_middle",
+        "side_bottom",
+        "festive_1",
+        "festive_2",
+        "festive_3",
+        "popup",
+      ],
       default: "slider",
       index: true,
     },

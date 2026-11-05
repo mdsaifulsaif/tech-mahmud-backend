@@ -131,6 +131,20 @@ const toggleFeaturedCategory = catchAsync(async (req: Request, res: Response) =>
   });
 });
 
+const toggleShowInHomeCategory = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await CategoryServices.toggleShowInHomeCategoryIntoDB(id as string);
+
+  revalidateFrontend({ tag: "categories" });
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: `Category is now ${result.showInHome ? "shown on Home Landing Cards" : "removed from Home Landing Cards"}!`,
+    data: result,
+  });
+});
+
 export const CategoryControllers = {
   createCategory,
   updateCategory,
@@ -139,4 +153,5 @@ export const CategoryControllers = {
   deleteCategory,
   getCategoryByProducts,
   toggleFeaturedCategory,
+  toggleShowInHomeCategory,
 };
