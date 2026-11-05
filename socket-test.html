@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Socket Test</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Socket Test Page</h1>
+    <p>Check the Console (F12) to see results.</p>
+
+    <script>
+        // আপনার সার্ভার কানেকশন
+        const socket = io("http://localhost:5000");
+
+        socket.on("connect", () => {
+            console.log("✅ Socket Connected! My ID:", socket.id);
+        });
+
+        // আপনার ডাটাবেজে থাকা একটি রাইডার আইডি এখানে বসান
+        const riderId = "6a1fbd3e51fd1d1027f86d7f"; 
+        
+        socket.on(`rider-location-${riderId}`, (data) => {
+            console.log("📍 রিয়েল-টাইম লোকেশন আপডেট পেলাম:", data);
+        });
+    </script>
+</body>
+</html>
