@@ -7,6 +7,7 @@ import cloudinary from "../../config/cloudinary";
 import { Category } from "../category/category.model";
 import { CategoryServices } from "../category/category.service";
 import { Brand } from "../brand/brand.model";
+import { cleanSlug } from "../../utils/slugify";
 
 // ===================== CREATE =====================
 const createProductIntoDB = async (body: Record<string, any>, files: any) => {
@@ -168,6 +169,7 @@ const createProductIntoDB = async (body: Record<string, any>, files: any) => {
   // ৯. payload
   const productData: Partial<IProduct> = {
     name,
+    slug: cleanSlug(body.slug || name),
     shortDescription,
     description,
     categoryID,
@@ -362,6 +364,11 @@ const updateProductIntoDB = async (
   // ৭. update payload
   const updateData: Partial<IProduct> = {
     ...(body.name && { name: body.name }),
+    ...(body.slug
+      ? { slug: cleanSlug(body.slug) }
+      : body.name
+        ? { slug: cleanSlug(body.name) }
+        : {}),
     ...(body.shortDescription && { shortDescription: body.shortDescription }),
     ...(body.description && { description: body.description }),
     ...(body.categoryID && { categoryID: body.categoryID }),
@@ -645,12 +652,19 @@ const getAllProductsFromDB = async (query: Record<string, any>) => {
       brandConditions.push({ brand: objId });
     }
 
-    // Look up brand by slug or name (case-insensitive)
+    // Look up brand by slug or name (case-insensitive, normalized dashes)
     const escapedBrand = rawBrand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const cleanedBrand = cleanSlug(rawBrand);
+    const cleanedBrandEscaped = cleanedBrand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const brandNameWithSpaces = cleanedBrand.replace(/-/g, " ");
+
     const matchedBrand = await Brand.findOne({
       $or: [
+        { slug: cleanedBrand },
         { slug: { $regex: `^${escapedBrand}$`, $options: "i" } },
+        { slug: { $regex: `^${cleanedBrandEscaped}$`, $options: "i" } },
         { name: { $regex: `^${escapedBrand}$`, $options: "i" } },
+        { name: { $regex: `^${brandNameWithSpaces}$`, $options: "i" } },
       ],
       isDeleted: false,
     }).select("_id");
@@ -1042,22 +1056,34 @@ const deleteProductFromDB = async (id: string) => {
 };
 
 
-const getSingleProductFromDB = async (id: string) => {
-  // ১. ভ্যালিডেশন: আইডিটি সঠিক ObjectId কি না
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new Error("Invalid Product ID format");
+const getSingleProductFromDB = async (idOrSlug: string) => {
+  let product: any = null;
+
+  // ১. যদি idOrSlug ভ্যালিড ObjectId হয় তবে ID দিয়ে খোঁজা
+  if (mongoose.Types.ObjectId.isValid(idOrSlug)) {
+    product = await Product.findById(idOrSlug)
+      .populate("categoryID") // ক্যাটাগরি ডিটেইলস
+      .populate("unit", "name shortName") // মেইন প্রোডাক্ট ইউনিট
+      .populate("variants.unitID", "name shortName") // ভেরিয়েন্ট ইউনিট
+      .populate({
+        path: "comboItems.productID",
+        select: "name slug thumbnail regularPrice salePrice stock unit",
+        populate: { path: "unit", select: "name shortName" }
+      });
   }
 
-  // ২. প্রোডাক্ট কুয়েরি
-  const product = await Product.findById(id)
-    .populate("categoryID") // ক্যাটাগরি ডিটেইলস
-    .populate("unit", "name shortName") // মেইন প্রোডাক্ট ইউনিট
-    .populate("variants.unitID", "name shortName") // ভেরিয়েন্ট ইউনিট
-    .populate({
-      path: "comboItems.productID",
-      select: "name slug thumbnail regularPrice salePrice stock unit",
-      populate: { path: "unit", select: "name shortName" }
-    });
+  // ২. যদি আইডি দিয়ে না পাওয়া যায় অথবা এটি slug হয়, তবে slug দিয়ে খোঁজা
+  if (!product) {
+    product = await Product.findOne({ slug: idOrSlug })
+      .populate("categoryID")
+      .populate("unit", "name shortName")
+      .populate("variants.unitID", "name shortName")
+      .populate({
+        path: "comboItems.productID",
+        select: "name slug thumbnail regularPrice salePrice stock unit",
+        populate: { path: "unit", select: "name shortName" }
+      });
+  }
 
   if (!product) {
     throw new Error("Product not found!");

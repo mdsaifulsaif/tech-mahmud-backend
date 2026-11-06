@@ -1,5 +1,6 @@
 import mongoose, { Schema, model } from "mongoose";
 import { IProduct } from "./product.interface";
+import { cleanSlug } from "../../utils/slugify";
 
 const variantAttributesSchema = new Schema(
   {
@@ -184,12 +185,9 @@ productSchema.virtual("availableStock").get(function () {
 });
 
 productSchema.pre("save", async function () {
-  // slug auto generate
-  if (!this.slug && this.name) {
-    this.slug = this.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)+/g, "");
+  // slug auto generate and clean
+  if (this.slug || this.name) {
+    this.slug = cleanSlug(this.slug || this.name);
   }
 
   // discount percent auto calculate

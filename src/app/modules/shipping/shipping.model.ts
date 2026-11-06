@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { IShippingConfig } from "./shipping.interface";
+import { IShippingConfig, IDeliverySettings } from "./shipping.interface";
 
 const shippingTierSchema = new Schema(
   {
@@ -22,6 +22,30 @@ const shippingConfigSchema = new Schema<IShippingConfig>(
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
+);
+
+const deliverySettingsSchema = new Schema<IDeliverySettings>(
+  {
+    baseLocation: { type: String, default: "Barisal", required: true },
+    insideCharge: { type: Number, default: 60, required: true },
+    outsideCharge: { type: Number, default: 150, required: true },
+    insideEstimatedDays: { type: String, default: "24 - 48 Hours" },
+    outsideEstimatedDays: { type: String, default: "2 - 4 Days" },
+    isFreeShippingActive: { type: Boolean, default: false },
+    freeShippingMinAmount: { type: Number, default: 2000 },
+    isStorePickupActive: { type: Boolean, default: true },
+    storePickupAddress: {
+      type: String,
+      default: "Tech Mahmud Main Store, Sadar Road, Barisal",
+    },
+    storePickupCharge: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+
+export const DeliverySettings = model<IDeliverySettings>(
+  "DeliverySettings",
+  deliverySettingsSchema
 );
 
 export const ShippingConfig = model<IShippingConfig>(

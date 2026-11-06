@@ -5,19 +5,24 @@ import {
   getShippingConfigByType,
   deleteShippingConfig,
   previewShippingCharge,
+  getDeliverySettings,
+  updateDeliverySettings,
 } from "./shipping.controller";
-import { isAuthenticated } from "../../middlewares/auth.middleware";
+import { isAuthenticated, isAdmin } from "../../middlewares/auth.middleware";
 
 const router = express.Router();
 
-router.get("/preview", isAuthenticated, previewShippingCharge);
+// Public: Shipping Settings & Preview
+router.get("/settings", getDeliverySettings);
+router.get("/preview", previewShippingCharge);
 
-// Admin
+// Admin: Base location & Delivery charge settings
+router.post("/admin/settings", updateDeliverySettings);
 router.get("/admin/all", getAllShippingConfigs);
 router.post("/admin/update", updateShippingConfig);
 router.delete("/admin/:type", deleteShippingConfig);
 
-// Public
+// Public type config
 router.get("/:type", getShippingConfigByType);
 
 export const ShippingRoutes = router;

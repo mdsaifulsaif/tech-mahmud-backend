@@ -27,7 +27,11 @@ const orderItemSchema = new Schema<IOrderItem>(
 const deliveryAddressSchema = new Schema(
   {
     name: { type: String, required: true },
+    firstName: { type: String },
+    lastName: { type: String },
     phone: { type: String, required: true },
+    email: { type: String },
+    address: { type: String },
     city: { type: String },
     area: {
       type: Schema.Types.Mixed,

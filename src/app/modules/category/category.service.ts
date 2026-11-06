@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { Category } from "./category.model";
 import { Product } from "../product/product.model";
 import { uploadToCloudinary } from "../../utils/uploadToCloudinary";
+import { cleanSlug } from "../../utils/slugify";
 
 
 const createCategoryIntoDB = async (payload: any, file: any) => {
@@ -28,12 +29,7 @@ const createCategoryIntoDB = async (payload: any, file: any) => {
   // ডাটা ক্লিনিং এবং ফরম্যাটিং (এই অংশটি ডাটা মিস হওয়া আটকাবে)
   const finalData = {
     name: payload.name,
-    slug:
-      payload.slug ||
-      payload.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)+/g, ""),
+    slug: cleanSlug(payload.slug || payload.name),
     description: payload.description || "",
     parentCategory:
       payload.parentCategory === "" ? null : payload.parentCategory,
@@ -75,7 +71,11 @@ const updateCategoryIntoDB = async (id: string, payload: any, file: any) => {
   // ৩. আপডেট ডাটা ফরম্যাটিং (আপনার ক্রিয়েট লজিকের মতোই)
   const updateData = {
     name: payload.name || isExist.name,
-    slug: payload.slug || isExist.slug,
+    slug: payload.slug
+      ? cleanSlug(payload.slug)
+      : payload.name
+        ? cleanSlug(payload.name)
+        : isExist.slug,
     description: payload.description !== undefined ? payload.description : isExist.description,
     parentCategory: payload.parentCategory === "" || payload.parentCategory === "null" 
                      ? null 
@@ -191,7 +191,22 @@ const getAllCategoryAndDescendantIds = async (
       targetCategory = await Category.findById(categoryIdentifier).select("_id");
     }
     if (!targetCategory && typeof categoryIdentifier === "string") {
-      targetCategory = await Category.findOne({ slug: categoryIdentifier }).select("_id");
+      const rawStr = categoryIdentifier.trim();
+      const cleaned = cleanSlug(rawStr);
+      const escaped = rawStr.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const cleanedEscaped = cleaned.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const nameWithSpaces = cleaned.replace(/-/g, " ");
+
+      targetCategory = await Category.findOne({
+        $or: [
+          { slug: cleaned },
+          { slug: { $regex: `^${escaped}$`, $options: "i" } },
+          { slug: { $regex: `^${cleanedEscaped}$`, $options: "i" } },
+          { name: { $regex: `^${escaped}$`, $options: "i" } },
+          { name: { $regex: `^${nameWithSpaces}$`, $options: "i" } },
+        ],
+        isDeleted: { $ne: true },
+      }).select("_id");
     }
     if (!targetCategory) return [];
 

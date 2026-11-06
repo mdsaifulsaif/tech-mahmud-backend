@@ -5,8 +5,44 @@ import {
   getShippingConfigByTypeService,
   deleteShippingConfigService,
   getShippingAndCommission,
+  getDeliverySettingsService,
+  updateDeliverySettingsService,
 } from "./shipping.service";
 import { Order } from "../order/order.model";
+
+// ===== Delivery Settings: Public Get =====
+export const getDeliverySettings = async (req: Request, res: Response) => {
+  try {
+    const settings = await getDeliverySettingsService();
+    return res.status(200).json({
+      success: true,
+      message: "Delivery settings retrieved successfully",
+      data: settings,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to retrieve delivery settings",
+    });
+  }
+};
+
+// ===== Delivery Settings: Admin Update =====
+export const updateDeliverySettings = async (req: Request, res: Response) => {
+  try {
+    const updated = await updateDeliverySettingsService(req.body);
+    return res.status(200).json({
+      success: true,
+      message: "Delivery settings updated successfully",
+      data: updated,
+    });
+  } catch (error: any) {
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Failed to update delivery settings",
+    });
+  }
+};
 
 export const previewShippingCharge = async (req: Request, res: Response) => {
   try {
@@ -35,15 +71,23 @@ export const previewShippingCharge = async (req: Request, res: Response) => {
     }
 
     const { shippingCharge } = await getShippingAndCommission(
-      deliveryType as "local" | "nationwide",
+      deliveryType as string,
       parsedSubtotal,
       isFirstOrder,
       false
     );
 
+    const settings = await getDeliverySettingsService();
+
     return res.status(200).json({
       success: true,
-      data: { shippingCharge, isFirstOrder },
+      data: {
+        shippingCharge,
+        isFirstOrder,
+        baseLocation: settings.baseLocation,
+        insideCharge: settings.insideCharge,
+        outsideCharge: settings.outsideCharge,
+      },
     });
   } catch (error: any) {
     return res.status(500).json({

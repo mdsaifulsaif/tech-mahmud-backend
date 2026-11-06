@@ -37,7 +37,11 @@ export interface IOrderItem {
 
 export interface IDeliveryAddress {
   name: string;
+  firstName?: string;
+  lastName?: string;
   phone: string;
+  email?: string;
+  address?: string;
   city: string;
   area?: Types.ObjectId | string;
   district?: string;

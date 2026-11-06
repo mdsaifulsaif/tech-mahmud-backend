@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { uploadToCloudinary } from "../../utils/uploadToCloudinary";
 import { Brand } from "./brand.model";
+import { cleanSlug } from "../../utils/slugify";
 
 
 /**
@@ -19,7 +20,7 @@ const createBrandIntoDB = async (payload: any, file: any) => {
   const finalData = {
     ...payload,
     logo: imageUrl,
-    slug: payload.slug || payload.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    slug: cleanSlug(payload.slug || payload.name),
     status: payload.status === "active" ? "active" : "inactive",
     isFeatured: payload.isFeatured === "true" || payload.isFeatured === true,
     showInHome: payload.showInHome === "true" || payload.showInHome === true,
@@ -80,11 +81,11 @@ const updateBrandInDB = async (
   // ৩. Update data (Create-এর মতোই)
   const updateData = {
     name: payload.name || isExist.name,
-    slug:
-      payload.slug ||
-      (payload.name
-        ? payload.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")
-        : isExist.slug),
+    slug: payload.slug
+      ? cleanSlug(payload.slug)
+      : payload.name
+        ? cleanSlug(payload.name)
+        : isExist.slug,
     logo: logoUrl,
     description:
       payload.description !== undefined
