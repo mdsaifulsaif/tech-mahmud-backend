@@ -34,7 +34,7 @@ const restoreStockForItems = async (
           { $inc: { reservedStock: -orderItem.quantity } },
           { session },
         );
-      } else if (prevStatus === "confirmed") {
+      } else if (prevStatus !== "cancelled") {
         await Product.findByIdAndUpdate(
           orderItem.productID,
           { $inc: { stock: orderItem.quantity } },
@@ -42,24 +42,26 @@ const restoreStockForItems = async (
         );
       }
 
-      // কম্বো ভেতরের আইটেম
-      for (const comboItem of comboProduct.comboItems) {
-        const reverseQty = (comboItem.quantity || 1) * orderItem.quantity;
-        if (comboItem.selectedVariant) {
-          await Product.findOneAndUpdate(
-            {
-              _id: comboItem.productID,
-              "variants._id": comboItem.selectedVariant,
-            },
-            { $inc: { "variants.$.stock": reverseQty, stock: reverseQty } },
-            { session },
-          );
-        } else {
-          await Product.findByIdAndUpdate(
-            comboItem.productID,
-            { $inc: { stock: reverseQty } },
-            { session },
-          );
+      // কম্বো ভেতরের আইটেম (শুধুমাত্র যদি স্টক আগে কাটা হয়েছিল)
+      if (prevStatus !== "pending" && prevStatus !== "cancelled") {
+        for (const comboItem of comboProduct.comboItems) {
+          const reverseQty = (comboItem.quantity || 1) * orderItem.quantity;
+          if (comboItem.selectedVariant) {
+            await Product.findOneAndUpdate(
+              {
+                _id: comboItem.productID,
+                "variants._id": comboItem.selectedVariant,
+              },
+              { $inc: { "variants.$.stock": reverseQty, stock: reverseQty } },
+              { session },
+            );
+          } else {
+            await Product.findByIdAndUpdate(
+              comboItem.productID,
+              { $inc: { stock: reverseQty } },
+              { session },
+            );
+          }
         }
       }
     } else if (orderItem.variantID) {
@@ -69,7 +71,7 @@ const restoreStockForItems = async (
           { $inc: { reservedStock: -orderItem.quantity } },
           { session },
         );
-      } else if (prevStatus === "confirmed") {
+      } else if (prevStatus !== "cancelled") {
         await Product.findOneAndUpdate(
           { _id: orderItem.productID, "variants._id": orderItem.variantID },
           {
@@ -89,7 +91,7 @@ const restoreStockForItems = async (
           { $inc: { reservedStock: -orderItem.quantity } },
           { session },
         );
-      } else if (prevStatus === "confirmed") {
+      } else if (prevStatus !== "cancelled") {
         await Product.findByIdAndUpdate(
           orderItem.productID,
           { $inc: { stock: orderItem.quantity } },
@@ -870,7 +872,7 @@ const getOrderStatsForAdmin = async () => {
     Order.countDocuments({ paymentStatus: "unpaid" }),
     Order.countDocuments({ paymentStatus: "refunded" }),
     Order.aggregate([
-      { $match: { paymentStatus: "paid" } },
+      { $match: { paymentStatus: "paid", status: { $nin: ["cancelled", "returned"] } } },
       { $group: { _id: null, total: { $sum: "$totalAmount" } } },
     ]),
     Order.aggregate([

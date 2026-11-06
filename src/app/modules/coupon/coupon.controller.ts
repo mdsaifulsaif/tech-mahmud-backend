@@ -80,20 +80,33 @@ const deleteCoupon = catchAsync(async (req: Request, res: Response) => {
 });
 
 const applyCoupon = catchAsync(async (req: Request, res: Response) => {
-  const { code, couponCode, subtotal, totalAmount, userID, items } = req.body;
+  const { code, couponCode, subtotal, totalAmount, userID, items, orderItems } = req.body;
   const targetCode = code || couponCode;
   const targetSubtotal = Number(subtotal ?? totalAmount ?? 0);
   const targetUserID =
-    userID?.toString() ||
     (req as any).user?._id?.toString() ||
     (req as any).user?.id?.toString() ||
+    userID?.toString() ||
     undefined;
+
+  const rawItems = items || orderItems || [];
+  const normalizedItems = Array.isArray(rawItems)
+    ? rawItems.map((it: any) => ({
+        productID: it.productID || it._id || it.id,
+        variantID: it.variantID || null,
+        categoryID: it.categoryID || it.category,
+        quantity: Number(it.quantity) || 1,
+        unitPrice: Number(it.unitPrice || it.price || 0),
+        salePrice: Number(it.salePrice || 0),
+        totalPrice: Number(it.totalPrice || (it.salePrice || it.unitPrice || it.price || 0) * (it.quantity || 1)),
+      }))
+    : undefined;
 
   const result = await CouponServices.validateAndCalculateCoupon(
     targetCode,
     targetSubtotal,
     targetUserID,
-    items
+    normalizedItems
   );
 
   sendResponse(res, {
