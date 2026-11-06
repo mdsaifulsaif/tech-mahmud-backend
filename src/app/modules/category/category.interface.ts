@@ -12,6 +12,7 @@ export interface ICategory {
   order?: number | string;
   imagePublicId?: string;
   isFeatured?: boolean;
+  isTrending?: boolean;
   showInHome?: boolean;
   showInMenu?: boolean;
   metaTitle?: string;

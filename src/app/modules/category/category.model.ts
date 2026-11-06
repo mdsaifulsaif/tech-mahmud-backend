@@ -50,6 +50,10 @@ const categorySchema = new Schema<ICategory>(
       type: Boolean, 
       default: false 
     },
+    isTrending: { 
+      type: Boolean, 
+      default: false 
+    },
     showInHome: { 
       type: Boolean, 
       default: false 

@@ -8,6 +8,11 @@ const bannerSchema = new Schema<IBanner>(
       trim: true,
       default: "",
     },
+    subtitle: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     image: {
       type: String,
       required: [true, "Banner image is required"],
@@ -23,18 +28,23 @@ const bannerSchema = new Schema<IBanner>(
       trim: true,
       default: "",
     },
+    categoryID: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+      default: null,
+    },
+    categorySlug: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    slot: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     placement: {
       type: String,
-      enum: [
-        "slider",
-        "side_top",
-        "side_middle",
-        "side_bottom",
-        "festive_1",
-        "festive_2",
-        "festive_3",
-        "popup",
-      ],
       default: "slider",
       index: true,
     },

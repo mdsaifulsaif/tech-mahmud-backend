@@ -23,9 +23,17 @@ router.patch(
 );
 
 router.patch(
+  "/toggle-trending/:id",
+  CategoryControllers.toggleTrendingCategory,
+);
+
+router.patch(
   "/toggle-home/:id",
   CategoryControllers.toggleShowInHomeCategory,
 );
+
+// Hierarchy category tree endpoint (must be before /:id)
+router.get("/tree", CategoryControllers.getCategoryTree);
 
 // category.route.ts এ এটি যোগ করুন
 router.get("/:id", CategoryControllers.getSingleCategory);

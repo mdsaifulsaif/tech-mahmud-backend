@@ -15,7 +15,9 @@ const getActiveBannersForClient = async (placement?: string) => {
     filter.placement = placement;
   }
 
-  const result = await Banner.find(filter).sort({ order: 1, createdAt: -1 });
+  const result = await Banner.find(filter)
+    .populate("categoryID", "name slug")
+    .sort({ order: 1, createdAt: -1 });
   return result;
 };
 
@@ -27,12 +29,15 @@ const getAllBannersForAdmin = async (placement?: string) => {
     filter.placement = placement;
   }
 
-  const result = await Banner.find(filter).sort({ order: 1, createdAt: -1 });
+  const result = await Banner.find(filter)
+    .populate("categoryID", "name slug")
+    .sort({ order: 1, createdAt: -1 });
   return result;
 };
 
 const getBannerByIdFromDB = async (id: string) => {
-  const result = await Banner.findOne({ _id: id, isDeleted: { $ne: true } });
+  const result = await Banner.findOne({ _id: id, isDeleted: { $ne: true } })
+    .populate("categoryID", "name slug");
   if (!result) {
     throw new Error("Banner not found");
   }

@@ -131,6 +131,20 @@ const toggleFeaturedCategory = catchAsync(async (req: Request, res: Response) =>
   });
 });
 
+const toggleTrendingCategory = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await CategoryServices.toggleTrendingCategoryIntoDB(id as string);
+
+  revalidateFrontend({ tag: "categories" });
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: `Category is now ${result.isTrending ? "marked as Trending" : "removed from Trending"}!`,
+    data: result,
+  });
+});
+
 const toggleShowInHomeCategory = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const result = await CategoryServices.toggleShowInHomeCategoryIntoDB(id as string);
@@ -145,13 +159,27 @@ const toggleShowInHomeCategory = catchAsync(async (req: Request, res: Response) 
   });
 });
 
+const getCategoryTree = catchAsync(async (req: Request, res: Response) => {
+  const status = req.query.status as string | undefined;
+  const result = await CategoryServices.getCategoryTreeIntoDB(status);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Category tree retrieved successfully",
+    data: result,
+  });
+});
+
 export const CategoryControllers = {
   createCategory,
   updateCategory,
   getSingleCategory,
   getCategories,
+  getCategoryTree,
   deleteCategory,
   getCategoryByProducts,
   toggleFeaturedCategory,
+  toggleTrendingCategory,
   toggleShowInHomeCategory,
 };

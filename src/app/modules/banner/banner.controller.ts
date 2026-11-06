@@ -14,7 +14,7 @@ const createBanner = catchAsync(async (req: Request, res: Response) => {
     imageUrl = uploadResult?.url || imageUrl;
   }
 
-  const payload = {
+  const payload: any = {
     ...req.body,
     image: imageUrl,
     placement: req.body.placement || "slider",
@@ -24,6 +24,10 @@ const createBanner = catchAsync(async (req: Request, res: Response) => {
         : true,
     order: req.body.order ? Number(req.body.order) : 0,
   };
+
+  if (!payload.categoryID || payload.categoryID === "" || payload.categoryID === "null") {
+    payload.categoryID = null;
+  }
 
   const result = await BannerServices.createBannerToDB(payload);
 
@@ -93,6 +97,10 @@ const updateBanner = catchAsync(async (req: Request, res: Response) => {
   if (updateData.isActive !== undefined) {
     updateData.isActive =
       updateData.isActive === "true" || updateData.isActive === true;
+  }
+
+  if (updateData.categoryID === "" || updateData.categoryID === "null") {
+    updateData.categoryID = null;
   }
 
   const result = await BannerServices.updateBannerInDB(id as string, updateData);

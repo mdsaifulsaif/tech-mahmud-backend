@@ -43,6 +43,7 @@ const createCategoryIntoDB = async (payload: any, file: any) => {
         : "inactive",
     order: payload.order ? Number(payload.order) : 0,
     isFeatured: payload.isFeatured === "true" || payload.isFeatured === true,
+    isTrending: payload.isTrending === "true" || payload.isTrending === true,
     showInHome: payload.showInHome === "true" || payload.showInHome === true,
     showInMenu: payload.showInMenu === "true" || payload.showInMenu === true,
     metaTitle: payload.metaTitle || "",
@@ -86,6 +87,7 @@ const updateCategoryIntoDB = async (id: string, payload: any, file: any) => {
     status: (payload.status === "active") ? "active" : (payload.status === "inactive" ? "inactive" : isExist.status),
     order: payload.order !== undefined && payload.order !== "" ? Number(payload.order) : isExist.order,
     isFeatured: payload.isFeatured !== undefined ? (payload.isFeatured === "true" || payload.isFeatured === true) : isExist.isFeatured,
+    isTrending: payload.isTrending !== undefined ? (payload.isTrending === "true" || payload.isTrending === true) : isExist.isTrending,
     showInHome: payload.showInHome !== undefined ? (payload.showInHome === "true" || payload.showInHome === true) : isExist.showInHome,
     showInMenu: payload.showInMenu !== undefined ? (payload.showInMenu === "true" || payload.showInMenu === true) : isExist.showInMenu,
     metaTitle: payload.metaTitle || isExist.metaTitle,
@@ -121,6 +123,9 @@ const getAllCategoriesFromDB = async (
   }
   if (query.isFeatured !== undefined) {
     categoryMatch.isFeatured = query.isFeatured === "true" || query.isFeatured === true;
+  }
+  if (query.isTrending !== undefined) {
+    categoryMatch.isTrending = query.isTrending === "true" || query.isTrending === true;
   }
   if (query.showInHome !== undefined) {
     categoryMatch.showInHome = query.showInHome === "true" || query.showInHome === true;
@@ -288,6 +293,16 @@ const toggleFeaturedCategoryIntoDB = async (id: string) => {
   return isExist;
 };
 
+const toggleTrendingCategoryIntoDB = async (id: string) => {
+  const isExist = await Category.findById(id);
+  if (!isExist) {
+    throw new Error("Category not found!");
+  }
+  isExist.isTrending = !isExist.isTrending;
+  await isExist.save();
+  return isExist;
+};
+
 const toggleShowInHomeCategoryIntoDB = async (id: string) => {
   const isExist = await Category.findById(id);
   if (!isExist) {
@@ -298,14 +313,49 @@ const toggleShowInHomeCategoryIntoDB = async (id: string) => {
   return isExist;
 };
 
+const getCategoryTreeIntoDB = async (status?: string) => {
+  const filter: any = { isDeleted: false };
+  if (status) {
+    filter.status = status;
+  }
+  const categories = await Category.find(filter)
+    .sort({ order: 1, createdAt: -1 })
+    .lean();
+
+  const map = new Map<string, any>();
+  const roots: any[] = [];
+
+  categories.forEach((cat) => {
+    map.set(String(cat._id), { ...cat, children: [] });
+  });
+
+  categories.forEach((cat) => {
+    const node = map.get(String(cat._id));
+    const parentId =
+      cat.parentCategory && typeof cat.parentCategory === "object"
+        ? cat.parentCategory._id
+        : cat.parentCategory;
+
+    if (parentId && map.has(String(parentId))) {
+      map.get(String(parentId))!.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  return roots;
+};
+
 export const CategoryServices = {
   createCategoryIntoDB,
   updateCategoryIntoDB,
   getSingleCategoryFromDB,
   getAllCategoriesFromDB,
+  getCategoryTreeIntoDB,
   deleteCategoryFromDB,
   getProductsByCategoryFromDB,
   toggleFeaturedCategoryIntoDB,
+  toggleTrendingCategoryIntoDB,
   toggleShowInHomeCategoryIntoDB,
   getAllCategoryAndDescendantIds,
 };
