@@ -4,19 +4,36 @@ import { Server } from "socket.io";
 let io: Server;
 
 export const initSocket = (httpServer: any) => {
+  const allowedOrigins = [
+    "https://tech-mahmud-frontend.vercel.app",
+    "https://tech-mahmud-dashboard.vercel.app",
+    "https://tech-mahmud-backend.vercel.app",
+    process.env.CLIENT_URL,
+    process.env.FRONTEND_URL,
+    process.env.DASHBOARD_URL,
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+    "http://localhost:3003",
+    "http://localhost:3004",
+    "http://localhost:3005",
+    "http://localhost:3006",
+  ].filter(Boolean) as string[];
+
   io = new Server(httpServer, {
     cors: {
-      origin: [
-        "https://sobjihaat-frontend-tau.vercel.app",
-        "https://kinbonow.vercel.app",
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://localhost:3002",
-        "http://localhost:3003",
-        "http://localhost:3004",
-        "http://localhost:3005",
-        "http://localhost:3006",
-      ],
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const isAllowed =
+          allowedOrigins.includes(origin) ||
+          origin.endsWith(".vercel.app") ||
+          /^http:\/\/localhost:\d+$/.test(origin);
+
+        if (isAllowed) {
+          return callback(null, true);
+        }
+        return callback(new Error(`Socket CORS blocked for origin: ${origin}`));
+      },
       methods: ["GET", "POST"],
       credentials: true,
     },

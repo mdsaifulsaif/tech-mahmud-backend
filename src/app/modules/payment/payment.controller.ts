@@ -35,11 +35,13 @@ const handleSuccess = async (req: Request, res: Response) => {
     // এখানে আপনার DB আপডেট লজিক লিখুন (যেমন: Order status = 'Paid')
 
     // ফ্রন্টেন্ডে রিডাইরেক্ট
-    res.redirect(`${process.env.FRONTEND_URL}/payment/success?transactionId=${tranId}`);
+    const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || "https://tech-mahmud-frontend.vercel.app";
+    res.redirect(`${frontendUrl}/payment/success?transactionId=${tranId}`);
 };
 
 const handleFail = async (req: Request, res: Response) => {
-    res.redirect(`${process.env.FRONTEND_URL}/payment/fail`);
+    const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || "https://tech-mahmud-frontend.vercel.app";
+    res.redirect(`${frontendUrl}/payment/fail`);
 };
 
 export const PaymentController = {

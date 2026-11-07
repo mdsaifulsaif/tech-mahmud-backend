@@ -102,6 +102,7 @@ export interface IProduct {
   isOnSale: boolean;
   isNew: boolean;
   isNewCollection?: boolean;
+  isTrending?: boolean;
 
   // Shipping
   shippingClass?: "normal" | "fragile" | "heavy";

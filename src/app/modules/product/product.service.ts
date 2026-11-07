@@ -211,6 +211,7 @@ const createProductIntoDB = async (body: Record<string, any>, files: any) => {
     isOnSale: body.isOnSale === "true" || body.isOnSale === true,
     isNew: body.isNew !== "false" && body.isNew !== false,
     isNewCollection: body.isNewCollection === "true" || body.isNewCollection === true,
+    isTrending: body.isTrending === "true" || body.isTrending === true,
     status: body.status || "active",
     metaTitle: body.metaTitle || "",
     metaDescription: body.metaDescription || "",
@@ -442,6 +443,7 @@ const updateProductIntoDB = async (
     ...(body.isNew !== undefined && { isNew: body.isNew === "true" || body.isNew === true }),
     ...(body.isNewCollection !== undefined && {
       isNewCollection: body.isNewCollection === "true" || body.isNewCollection === true,
+    isTrending: body.isTrending === "true" || body.isTrending === true,
     }),
     ...(body.status && { status: body.status }),
     ...(body.metaTitle !== undefined && { metaTitle: body.metaTitle }),
@@ -698,6 +700,9 @@ const getAllProductsFromDB = async (query: Record<string, any>) => {
   if (isFeatured !== undefined) matchStage.isFeatured = isFeatured === "true";
   if (query.isNewCollection !== undefined) {
     matchStage.isNewCollection = query.isNewCollection === "true" || query.isNewCollection === true;
+  }
+  if (query.isTrending !== undefined) {
+    matchStage.isTrending = query.isTrending === "true" || query.isTrending === true;
   }
   if (isSubscriptionAvailable !== undefined) {
     matchStage.isSubscriptionAvailable = isSubscriptionAvailable === "true";
@@ -1647,6 +1652,32 @@ const getNewCollectionProducts = async (limit: number = 12) => {
   return products;
 };
 
+const getTrendingProducts = async (limit: number = 12) => {
+  let products = await Product.find({
+    isTrending: true,
+    status: "active",
+  })
+    .limit(limit)
+    .populate("categoryID", "name slug")
+    .populate("unit", "name shortName")
+    .populate("variants.unitID", "name shortName")
+    .lean()
+    .sort({ createdAt: -1 });
+
+  return products;
+};
+
+const toggleProductFlagIntoDB = async (
+  id: string,
+  flag: "isFeatured" | "isNewCollection" | "isTrending",
+) => {
+  const product = await Product.findById(id);
+  if (!product) throw new Error("Product not found!");
+  (product as any)[flag] = !(product as any)[flag];
+  await product.save();
+  return product;
+};
+
 export const ProductServices = {
   createProductIntoDB,
   getAllProductsFromDB,
@@ -1658,4 +1689,6 @@ export const ProductServices = {
   getProductsByCategorySlugFromDB,
   getFeaturedProducts,
   getNewCollectionProducts,
+  getTrendingProducts,
+  toggleProductFlagIntoDB,
 };

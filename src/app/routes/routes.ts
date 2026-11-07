@@ -19,7 +19,6 @@ import { DashboardRoutes } from "../modules/dashboard/dashboard.route";
 import { AreaRequestRoutes } from "../modules/areaRequest/areaRequest.route";
 import { CouponRoutes } from "../modules/coupon/coupon.route";
 import { BannerRoutes } from "../modules/banner/banner.route";
-import { ChatRoutes } from "../modules/chat/chat.route";
 import { TrackingRoutes } from "../modules/traking/tracking.routes";
 
 const router = Router();
@@ -112,10 +111,6 @@ const moduleRoutes = [
   {
     path: "/banners",
     route: BannerRoutes,
-  },
-  {
-    path: "/chat",
-    route: ChatRoutes,
   },
   {
     path: "/tracking",

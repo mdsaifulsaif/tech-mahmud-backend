@@ -16,6 +16,8 @@ router.post(
   ProductControllers.createProduct,
 );
 
+router.patch("/:id/toggle-flag", ProductControllers.toggleProductFlag);
+
 router.patch(
   "/:id",
   // isAuthenticated,
@@ -46,6 +48,9 @@ router.get("/featured", ProductControllers.getFeaturedProducts);
 
 // Get new collection products (home page)
 router.get("/new-collection", ProductControllers.getNewCollectionProducts);
+
+// Get trending products (home page)
+router.get("/trending", ProductControllers.getTrendingProducts);
 
 router.get("/:id", ProductControllers.getSingleProduct);
 

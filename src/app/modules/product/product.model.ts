@@ -154,6 +154,7 @@ const productSchema = new Schema<IProduct>(
     isOnSale: { type: Boolean, default: false },
     isNew: { type: Boolean, default: true },
     isNewCollection: { type: Boolean, default: false },
+    isTrending: { type: Boolean, default: false },
 
     // Shipping
     freeShipping: { type: Boolean, default: false },

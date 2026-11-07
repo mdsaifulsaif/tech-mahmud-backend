@@ -203,6 +203,46 @@ const getNewCollectionProducts = async (req: Request, res: Response) => {
   }
 };
 
+const getTrendingProducts = async (req: Request, res: Response) => {
+  try {
+    const { limit = 12 } = req.query;
+    const products = await ProductServices.getTrendingProducts(Number(limit));
+
+    res.status(200).json({
+      success: true,
+      message: "Trending products retrieved successfully",
+      data: products,
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to get trending products",
+    });
+  }
+};
+
+const toggleProductFlag = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { flag } = req.body;
+  if (!["isFeatured", "isNewCollection", "isTrending"].includes(flag)) {
+    throw new Error("Invalid toggle flag");
+  }
+
+  const result = await ProductServices.toggleProductFlagIntoDB(
+    id as string,
+    flag as any,
+  );
+
+  revalidateFrontend({ tag: "products" });
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: `Product ${flag} updated successfully!`,
+    data: result,
+  });
+});
+
 export const ProductControllers = {
   createProduct,
   getAllProducts,
@@ -214,4 +254,6 @@ export const ProductControllers = {
   getProductsByCategorySlug,
   getFeaturedProducts,
   getNewCollectionProducts,
+  getTrendingProducts,
+  toggleProductFlag,
 };
