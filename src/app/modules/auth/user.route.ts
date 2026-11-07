@@ -19,6 +19,7 @@ router.get("/search", isAuthenticated, UserControllers.searchUsers);
 
 // Private Routes
 router.post("/logout", isAuthenticated, UserControllers.logoutUser);
+router.post("/change-password", isAuthenticated, UserControllers.changePassword);
 
 router.patch(
   "/update-profile",

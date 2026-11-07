@@ -11,7 +11,6 @@ import { ContactRoutes } from "../modules/email/email.route";
 import { UnitRoutes } from "../modules/unit/unit.route";
 import { BrandRoutes } from "../modules/brand/brand.route";
 import { OrderRoutes } from "../modules/order/order.route";
-import { ComplaintRoutes } from "../modules/complaint/complaint.route";
 import { AreaRoutes } from "../modules/area/area.route";
 import { ShippingRoutes } from "../modules/shipping/shipping.route";
 import { siteSettingRoutes } from "../modules/sitesettings/siteSettingsRoute";
@@ -77,10 +76,6 @@ const moduleRoutes = [
     route: BrandRoutes,
   },
   {
-    path: "/complaints",
-    route: ComplaintRoutes,
-  },
-  {
     path: "/area",
     route: AreaRoutes,
   },
@@ -95,10 +90,6 @@ const moduleRoutes = [
   {
     path: "/dashboard",
     route: DashboardRoutes,
-  },
-  {
-    path: "/complain",
-    route: ComplaintRoutes,
   },
   {
     path: "/area-requests",

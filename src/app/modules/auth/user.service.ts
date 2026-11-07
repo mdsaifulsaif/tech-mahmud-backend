@@ -107,6 +107,30 @@ const createGoogleUserInDB = async (payload: {
   return result;
 };
 
+const changePasswordInDB = async (
+  userId: string,
+  currentPass: string,
+  newPass: string
+) => {
+  const user = await User.findById(userId).select("+password");
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (!user.password) {
+    throw new Error("Local password is not set for this account");
+  }
+
+  const isMatched = await User.isPasswordMatched(currentPass, user.password);
+  if (!isMatched) {
+    throw new Error("Current password does not match");
+  }
+
+  user.password = newPass;
+  await user.save();
+  return true;
+};
+
 export const UserServices = {
   registerUserIntoDB,
   findUserByEmail,
@@ -122,4 +146,5 @@ export const UserServices = {
   clearRefreshTokenInDB,
   findUserByGoogleId,
   createGoogleUserInDB,
+  changePasswordInDB,
 };

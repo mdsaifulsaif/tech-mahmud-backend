@@ -501,6 +501,28 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
   }
 };
 
+const changePassword = catchAsync(async (req: any, res: Response) => {
+  const userId = req.user?._id || req.user?.id;
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: "Current password and new password are required",
+      data: null,
+    });
+  }
+
+  await UserServices.changePasswordInDB(userId, currentPassword, newPassword);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Password changed successfully!",
+    data: null,
+  });
+});
 
 export const UserControllers = {
   registerUser,
@@ -512,8 +534,8 @@ export const UserControllers = {
   verifyEmail,
   resendVerificationEmail,
   refreshAccessToken,
-  forgotPassword,   // নতুন
-  resetPassword,    // নতুন
-
-  searchUsers
+  forgotPassword,
+  resetPassword,
+  searchUsers,
+  changePassword,
 };
