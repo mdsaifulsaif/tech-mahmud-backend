@@ -16,7 +16,7 @@ export async function trackEventHandler(req: Request, res: Response) {
     const payload: TrackingEventPayload = {
       eventName: body.eventName,
       eventId: body.eventId || randomUUID(),
-      eventSourceUrl: body.eventSourceUrl || "https://sobjihaat.com",
+      eventSourceUrl: body.eventSourceUrl || process.env.CLIENT_URL || "https://tech-mahmud-frontend.vercel.app",
       actionSource: body.actionSource || "website",
       userData: {
         email: body.email,
@@ -64,10 +64,10 @@ export async function testTrackingEventHandler(req: Request, res: Response) {
     const testPayload: TrackingEventPayload = {
       eventName: req.body.eventName || "PageView",
       eventId: `test-${randomUUID()}`,
-      eventSourceUrl: req.body.eventSourceUrl || "https://sobjihaat.com/test",
+      eventSourceUrl: req.body.eventSourceUrl || "https://tech-mahmud-frontend.vercel.app/test",
       actionSource: "website",
       userData: {
-        email: "test@sobjihaat.com",
+        email: "test@techmahmud.com",
         phone: "01700000000",
         externalId: "test-admin-user",
         clientIpAddress: req.ip || "127.0.0.1",
