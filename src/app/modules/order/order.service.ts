@@ -11,6 +11,16 @@ import { TrackingEventPayload } from "../traking/tracking.interface";
 import { dispatchTrackingEvent } from "../traking/services/eventDispatcher.service";
 import { CouponServices } from "../coupon/coupon.service";
 
+// ===================== HELPER: Order Number Generator =====================
+export const generateOrderNumber = (): string => {
+  const now = new Date();
+  const year = String(now.getFullYear()).slice(-2);
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+  return `TM-${year}${month}${day}-${randomSuffix}`;
+};
+
 // ===================== HELPER: Stock Restore =====================
 
 const restoreStockForItems = async (
@@ -365,6 +375,7 @@ const createOrderIntoDB = async (userID: string, payload: any) => {
     // ✅ Prepare Order Data
     // ============================================
     const orderData: Partial<IOrder> = {
+      orderNumber: payload.orderNumber || generateOrderNumber(),
       userID: userID as any,
       items: orderItems,
       subtotal,
@@ -1450,6 +1461,7 @@ const adminCreateOrderIntoDB = async (payload: any) => {
     // ✅ Order Data — userID থাকলে বসবে, না থাকলে undefined (guest order)
     // ============================================
     const orderData: Partial<IOrder> = {
+      orderNumber: payload.orderNumber || generateOrderNumber(),
       userID,
       isGuestOrder,
       items: orderItems,

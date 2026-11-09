@@ -173,6 +173,18 @@ const orderSchema = new Schema<IOrder>(
   { timestamps: true }
 );
 
+// Auto-generate orderNumber if missing
+orderSchema.pre("validate", function () {
+  if (!this.orderNumber) {
+    const now = new Date();
+    const year = String(now.getFullYear()).slice(-2);
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    this.orderNumber = `TM-${year}${month}${day}-${randomSuffix}`;
+  }
+});
+
 // Indexes
 orderSchema.index({ userID: 1, status: 1 });
 orderSchema.index({ status: 1, createdAt: -1 });
